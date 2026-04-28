@@ -1,0 +1,72 @@
+CmaOptimizer {
+	signature_prefix = BLKPW_P40_DATE_TIME
+	max_errors = 10
+
+	# Condition-specific initialization
+	init{file ="parameters/init/Pain40.par"}
+
+	min_progress = 1e-4
+
+	SimulationObjective {
+		max_duration = 12
+
+		ModelHyfydy {
+			signature_postfix = HFD
+			model_file = models/H1120_STW_normalseat_10MPa.hfd
+			state_init_file = models/BasedOnLessDeg_P1242_C101_InitState_adj4_SH_044_Jan22.zml
+			initial_load = 1
+
+			<< models/HfdConfigPlanarMotorCollisionV2.zml >>
+		}
+
+		SequentialController {
+			transition_intervals = ["0.2~0.01<0.2,2>" "0.30~0.01<0.1,1.5>"]
+
+			<< models/RF1_H1120_STW_2023_kL_kf_kv_vest.scone >>
+			<< models/RF2_H1120_STW_2023_kL_kf_kv_vest.scone >>
+			<< models/Gait_H1120_STW_2023_delays_02022023.scone >>
+		}
+
+		CompositeMeasure {
+			MimicMeasure {
+				file = models/P1242_C101.sto
+				name = mimic_measure
+				weight = 1000
+				threshold = 0.015
+				include_states = pelvis.pos.y;pelvis.pos.x;
+				stop_time = 0.8
+			}
+
+			CompositeMeasure {
+				GaitMeasure {
+					name = Gait
+					weight = 10
+					initiation_steps = 3
+					threshold = 0.05
+					termination_height = 1.2
+					min_velocity = 0.8
+					start_time = 1.2
+					stop_time = 6
+				}
+
+				EffortMeasure {
+					name = Effort
+					weight = 0.01
+					measure_type = Wang2012
+					use_cost_of_transport = 1
+				}
+
+				ReactionForceMeasure {
+					name = GRF
+					start_time = 1
+					weight = 0.1
+					max = 1.10
+					abs_penalty = 1
+				}
+			}
+
+			# TODO: weakness_tag=p40 에 따른 추가 제약/measure를
+			# verified syntax로 확정 후 여기에 반영하세요.
+		}
+	}
+}
