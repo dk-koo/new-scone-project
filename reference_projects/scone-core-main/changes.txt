@@ -1,0 +1,441 @@
+~~NOCACHE~~
+====== SCONE Version History ======
+
+See changes.txt in SCONE Studio for the most recent updates.
+
+=== New User Interface Features ===
+  * Added support for computing and analyzing muscle moment arms and muscle moments.
+  * Added option "keep all data frames data frames for analysis", which keeps data at full resolution for analysis, but not for file storage.
+  * New settings for gait analysis (with defaults): skip_first (2), skip_last (1), force_threshold (0.001), min_stance_duration (0.1).
+  * New keyboard shortcut (Ctrl + L) to directly go to the filter input in the analysis window.
+  * The results file browser now allows selection and removal of multiple files or folders at once.
+  * Removing files now moves them to the recycle bin (requires Qt 5.15)
+  * Pressing ''<return>'' on a folder in the Optimization results automatically evaluates the most recent .par file in that folder.
+  * Editor now automatically adds closing characters for {}, [], () and ""
+  * Added option to reload the current document (Ctrl + R).
+  * Progress results graphs now scroll properly when zoomed in. 
+  * Viewer now supports static camera, toggle via the View menu.
+  * Added visualization of model COM and Heading.
+  * Added option to convert OpenSim models to Hyfydy using Tools -> Convert Model...
+
+=== New Scenario and Optimization Features ===
+  * New NeuralNetworkController (experimental).
+  * MimicMeasure now has time_offset.
+  * New muscle sensors: MuscleLengthVelocitySqrtSensor, MuscleSpindle2Sensor.
+  * New body sensors: BodyOriVelSensor, BodyOriVelLoadSensor.
+  * Scenario files now support inline macro expansion, e.g. "text${var}", which can be useful for adding a macro to a signature.
+  * Optimizers now have the option to filter specific parameters via ''init_file_include'' and ''init_file_exclude''.
+  * Controllers and Measures now have an extra 'signature' setting, that replaces the auto-generated signature with a custom one.
+  * CmaOptimizer now supports setting the maximum number of errors allowed during the evaluation of a single population, via 'max_errors' (default = 0).
+
+=== Updates and Fixes ===
+  * Analysis windows are now updated correctly after loading a .sto from the optimization results (#247).
+  * Updated warning message when gait analysis channels are missing, removed message: "lerp_map() was called on empty map" (#247).
+  * sconecmd now supports -r in combination with -o, closes #230.
+  * GaitStateController transition parameters are now optimized individually when symmetric = 0 (closes #214).
+  * GaitStateController shows an error message (instead of crashing) when an uneven number of legs has been detected.
+  * MimicMeasure::stop_time default is now set to match end of storage file.
+  * SequentialController now correctly stores Analysis data of child controllers.
+  * Fixed issue where evaluation would start automatically when loading while playback is active.
+  * Line widths in Analysis view and progress windows now default to 1. It turns out other values lead to poor performance.
+  * Fixed checking if document is modified, increasing editing performance.
+  * Editor now gets focus after opening file.
+  * MimicMeasure error limits are now disabled (0) by default, peak_error_limit is set to 2 * average_error_limit by default.
+  * Updated documentation for GaitStateController and GaitMeasure, closes #69.
+  * EffortMeasure computation is now correct again when use_cost_of_transport = 0.
+  * CmaPoolOptimizer now works again.
+  * Fixed inaccurate warning of unused parameters in CmaPoolOptimizer.
+  * Fixed progress graph zooming with pooled CmaPoolOptimizer.
+  * pooled_evaluator is now properly initialized so it doesn't need to restart all threads immediately.
+  * EffortMeasure now shows name in Analysis Window and .sto output.
+  * Fixed incorrect optimization timing when optimizations took longer than 922 seconds.
+
+==== SCONE 1.5.0 ====
+//Released June 19, 2020//
+
+=== New Features ===
+  * New ''Parameter View'' window that shows all optimization parameters in the current scenario.
+  * New ''Evaluation Report'' window that shows the measure results from the most recent evaluation.
+  * Context-sensitive help: pressing F1 in the scenario shows on-line help for the keyword under the cursor.
+  * New ''StepMeasure'' for penalizing stride length and/or step duration, thanks to **Dimitar Stanev**.
+  * ''GaitStateController'' can now have single-sided controllers, using the ''legs'' parameter.
+  * Help menu now has links for ''About...'' and ''User Forum''
+  * New (very useful!) text editor option: Press ''Ctrl + /'' to toggle comments for the current selection.
+  * ''.scone'' files now support ''%%//%%'' and ''/*'' ''*/'' style comments.
+  * New menu option ''Window -> Reset Window Layout'' to restore the original window layout.
+  * ''EffortMeasure'' now supports ''SquaredMuscleActivation''.
+  * ''SequentialController'' now outputs which controller is active in the AnalysisWindow, as 'active_index'. Closes #200.
+  * ''FeedForwardController'' now has ''include'' and ''exclude'' settings for targeting specific actuators.
+  * Measures now have a ''threshold_transition setting'' for gradually decreasing the measure if they approach the threshold (if any). 
+  * ''BodyMeasure'' now uses ''direction'' and has option for magnitude.
+  * ''GaitMeasure'' ''base_bodies'' now use model foot bodies by default, instead of toes_l / toes_r. This will result in a slightly different outcome for existing scenarios that have no ''base_bodies'' specified.
+  * New command line option -b for benchmarking a scenario
+  * ''MimicMeasure'' now has ''average_error_limit'' and ''peak_error_limit'' options for early termination
+  * Option to store linear and angular momentum.
+
+=== Updates and Fixes ===
+  * ''Edit -> Find'' and ''Find Next'' now also work with .lua files.
+  * Find Text now starts at the next occurrence. Added a hint for using F3 / Shift + F3. Closes #188.
+  * ''RangePenalty'' documentation now shows min and max parameters instead of 'range'.
+  * The ''RangePenalty'' default of (-inf, inf) now works correctly with angle types, such as in ''DofMeasure'' postion / velocity.
+  * When creating a video while ffmpeg is not found, an error message is shown instead of a silent exit.
+  * Fixed issue where loading an invalid OpenSim model could crash SCONE.
+  * Fixed tab order in AnalysisView tab order between filter and select checkbox.
+  * Error for unnamed child controllers is now warning again.
+  * Fixed rare invalid cycle detection in Gait Analysis.
+  * Fixed Lua automatic indentation when using 'for' or 'while'.
+  * Simulation no longer crashes when no controller is defined.
+  * Models are now called ModelOpenSim3 / ModelOpenSim4 to be consistent with the online help. Tutorials have been updated.
+  * Current optimization progress is now shown in optimization window tooltip.
+  * SCONE now always logs to the terminal under Linux.
+  * Message "Invalid scenario settings" now shows invalid setting(s) in message window.
+  * Gait Analysis now provides more useful error messages when loading a template.
+  * No longer is a restart required after selecting a different gait analysis template.
+
+==== SCONE 1.4.0 ====
+//Released March 3, 2020//
+
+=== New Features and Updates ===
+  * Gait Analysis support, allowing users to extract gait cycles from simulation results, and compare gait parameters to norm data
+  * Scripting improvements and updates:
+    * Greatly improved error handling in Lua scripts, closes #184, closes #80, closes #81
+    * ScriptMeasure and ScriptController now support 'external_files', which can be used to add files included by a 'require' keyword. closes 
+    * Support for automatic indentation when editing Lua files
+    * Renamed LuaMuscle::fiber_force() to LuaMuscle:force()
+  * Video output and visualization:
+    * Add option to automatically set resolution of a video by resizing the viewer window (floating windows only)
+    * Video output now supports mp4 (default), avi and mov container formats
+    * Added optional visualization of Body Center of Mass (COM)
+  * Data analysis:
+    * Added option to permanently 'Keep' specific graphs in the Analysis window (''Ctrl+Shift+k''), allowing easy comparison between different results
+    * Added option to extract specific channels to separate tab-separated file, via ''Tools -> Preferences -> Advanced''
+    * Added option to output relation between dof and muscle length to file, via ''Tools -> Muscle Analysis''
+    * Added option to show model information to the messages window, via ''Tools -> &Model Analysis''
+  * FeedForwardController now supports ''SineWave'', with parameterizable ''amplitude'', ''frequency'', ''phase'', and ''offset''
+  * Added ''initial_equilibration_activation'' parameter for to Model
+  * Pressing ''F2'' in Optimization Results now allows renaming files and folders
+
+=== Fixes ===
+  * Fix several crashes related to scenario or script errors
+  * Progress window now report error message in case of flat fitness on first generation
+  * Fixed message "Could not find Optimizer": SCONE no longer tries to evaluate a .scone file that doesn't have the word "Optimizer" in it
+  * Pressing "Cancel" when asked to "Save Changes" now works correctly
+  * Fixed default file type when using "File -> Save As...", closes #186
+  * Fixed crash when trying that write to an .sto that is open in anther program, closes #185
+  * Fixed GaitMeasure step length and step duration reporting
+  * EffortMeasure Wang2012 is now guaranteed to be non-negative
+  * Fixed potential crashes in SconeStorageDataModel::timeValue(), SconeStorageDataModel::label() and SconeStorageDataModel::getSeries()
+  * Many documentation fixes and updates
+  * Viewer no longer gets keyboard focus after evaluating a .par file
+  * Double-clicking a folder in "Optimization Results" now opens the folder instead of showing an error
+
+==== SCONE 1.3.3 ====
+//Released January 7, 2020//
+
+=== New Features and Updates ===
+
+  * Updates to ScriptController and ScriptMeasure:
+    * LuaBody now has support for mass(), inertia_diagonal(), closes #176
+    * LuaDofs can now be used as actuators, through is_actuated(), add_input(), input(), min_input(), max_input(), min_torque(), max_torque(). See online documentation for details. closes #177
+    * Added Lua string library to ScriptController and ScriptMeasure, closes #95
+    * ScriptController init function now has 'side' parameter, which denotes if the controller is for a specific side (-1 = left, 0 = any, 1 = right). closes #96 
+    * Documentation updates
+  * Added support for concurrent_optimizations in CmaPoolOptimizer
+  * New output channels for muscles: mtu_length, mtu_velocity
+  * Improved performance of writing .sto output
+  * Added simulation statistics in output
+
+=== Fixes ===
+  * StudioModel no longer crashes when objective is no ModelObjective
+  * Fixed crash when trying to save as an unknown file format
+  * Improved error message when an invalid state is entered in GaitStateController. closes #179
+
+==== SCONE 1.3.2 ====
+//Released December 10, 2019//
+
+=== New Features and Updates ===
+  * Added support for displaying .obj and .stl files
+  * Display geometries that exist in the model folder are now automatically copied to the output folder during optimization. **To prevent excessive copies, please copy the display geometries to the shared 'geometries' folder**.
+  * Optimizer report now includes time, number_of_evals, evals_per_sec
+
+=== Fixes ===
+  * Fixed issue causing the initial parameter file (''init_file'') of an optimization not to be copied to the output folder, making it impossible to playback optimization results that use ''init_file''
+  * ''GaitStateController'' now displays a proper warning message when no legs are defined in the model
+  * Increased maximum data output frequency to 1e6
+
+==== SCONE 1.3.1 ====
+//Released November 27, 2019//
+
+=== New Features and Updates ===
+  * Support for building SCONE on Linux, many thanks to **Dimitar Stanev**
+  * Support for Travis-CI build integration, many thanks to **Dimitar Stanev** and **Chris Dembia**
+  * Added support for optimizing OpenSim models with ''ContactMesh'' contact geometry
+  * 3D Viewer settings are now remembered when restarting SCONE
+  * Added joint force visualization option to 3D viewer
+  * Improved support for the concept of //legs//, which is used by ''GaitController'' and ground reaction force reporting. Model-specific leg elements can now be specified through ''leg_upper_body'' and ''leg_contact_force'' parameters in OpenSim3Model. Previously, these values were hard-coded to their default values ''femur'' and ''foot''.
+
+=== Fixes ===
+  * Fixed issue where duplicate external resources would cause an error during optimization
+  * GaitMeasure documentation of upper_body and base_bodies
+  * Fixed infinite loop when no suitable initial state could be found in models that define contact geometry but no contact force
+  * Resolved issue where SCONE could crash if a ContactGeometry for a foot body segment did not exist
+
+==== SCONE 1.3.0 ====
+//Released November 12, 2019//
+
+=== New Features and Updates ===
+  * SCONE scenarios are now loaded an visualized immediately after a file is opened or saved
+  * Improved support for editing and optimizing more model properties (using ''Properties { ... }'') directly in the SCONE scenario. These include ContactGeometry (position, radius, etc.), Joint, and Coordinate properties. Closes #78
+  * Major performance improvement of the SCONE User Interface when the 3D visualizer is not actively used
+  * 3D viewer now supports keyboard shortcuts for orbit (''Left'', ''Right'', ''PgUp'', ''PgDn''), pan (''Shift + Arrow keys'') and zoom (''Up'' and ''Down'')
+  * ''Ctrl + Space'' now toggles playback
+  * ''Ctrl + E'' now evaluates the currently selected scenario
+  * Visualizer no longer uses emissive component, added ambient_intensity parameter
+  * SCONE Unit tests are now performed in parallel for improved performance
+
+=== Fixes ===
+  * When optimizing a scenario, the //copied// versions of models and scripts are now used, so you can freely edit the originals during an active optimization
+  * Fixed incorrect "Please select a .scone file" error while optimizing or evaluating a scenario
+  * ''PieceWiseLinear'' and ''PieceWiseConstant'' functions now check if ''dt > 0''
+  * ''ImitationObjective'' was broken, now it works again
+
+==== SCONE 1.2.3 ====
+//Released September 13, 2019//
+
+=== Fixes ===
+  * ScriptMeasure / ScriptController: Fixed issue causing contact_force(), contact_moment() and contact_point() to return zero
+  * ScriptMeasureJump.lua (from Tutorial 6a) now demonstrates use of body:contact_force()
+
+==== SCONE 1.2.2 ====
+//Released September 9, 2019//
+
+=== Fixes ===
+  * ScriptMeasure / ScriptController: Contact forces are now accessed correctly using contact_force(), contact_moment() and contact_point()
+  * File Save (''Ctrl + s'') now works with .lua files (closes #77)
+  * Open File (''Ctrl + o'') now shows all supported file formats by default
+  * Jumping tutorials now explicitly maximize results
+  * Documentation fixes
+  * Minor performance enhancements
+
+==== SCONE 1.2.1 ====
+//Released July 25, 2019//
+
+=== Fixes ===
+  * ScriptController and ScriptMeasure: Lua scripts now support 'require' for including other scripts located in the same folder
+  * FeedForwardController now supports CoordinateActuators
+  * FeedForwardController no longer crashes when no actuators could be found
+
+==== SCONE 1.2.0 ====
+//Released June 25, 2019//
+
+=== New Features and Updates ===
+  * Contacts forces are now correctly reported and displayed in the SCONE 3D visualizer.
+  * Ground plane visualization now supports tilt and offsets.
+  * GaitMeasure takes into account ground plane slopes when detecting falling.
+  * Improved support for defining symmetric / asymmetric controllsers. The 'symmetric' property now works as expected in all controllers and is inherited from parent controllers if not specified (root controller defaults to true).
+  * Scripting (ScriptMeasure and ScriptController):
+  	* Added support store_data() for writing data to .sto and SCONE analysis window
+  	* Improved error handling and reporting for scripts
+  	* added body:point_pos and body:point_vel
+  	* added functionality to LuaVec3 and LuaQuat (see reference manual)
+  * Added warning in folder preferences dialog to avoid network drives (issue #53)
+  * Pressing F5 will now evaluate the currently active scenario (if any)
+  * When pressing Ctrl + T or Ctrl + F5 while a .lua file is active, scone tries to open a .scone instead.
+  * Updated tutorials and documentation
+
+=== Fixes ===
+  * All open files are now checked for modification when running a scenario
+  * Close current tab (Ctrl+W) now works correctly
+  * Jump tutorials now use correct init_file
+  * JumpMeasure now supports both 'body' and 'target_body', matching documentation and maintaining backwards compatibility
+  * Text modification detection now works properly with undo
+  * Text documents are now automatically focused when opened
+
+==== SCONE 1.1.1 ====
+//Released May 29, 2019//
+
+=== New Features and Updates ===
+  * Added new MuscleMeasure for penalizing muscle activation, length and contraction velocity (issue #36).
+  * RangePenalty now supports 'mode' setting, allowing the final penalty to be the 'average' (default), 'lowest', or 'highest' of all recorded
+  * New measure_type in EfforMeasure: SquaredMuscleStress. This minimizes the sum of (F/PCSA)^2 for all muscles.
+  * Controllers now have 'name' member that is used as a prefix for all parameter names. This should prevent undesired parameter name clashes when combining controllers. CompositeController displays warning when child controllers have identical names.
+  * Added warning in folder preferences dialog to avoid network drives (issue #53)
+  * Documentation updates
+  * Tutorial updates
+
+=== Fixes ===
+  * SequentialController now works correctly
+  * NoiseController more accurately handles cases where the noise STD is zero
+  * tutorial 6b, renamed 'gyro' to 'external balance device'
+
+==== SCONE 1.1.0 ====
+//Released May 20, 2019//
+
+=== New Features and Updates ===
+  * SCONE now has a powerful new scripting interface for custom controllers and measures
+    * Using the lua scripting language (http://lua.org)
+    * Create custom controllers using ScriptController
+    * Create custom measures using ScriptMeasures
+    * Support for writing custom data to .sto and SCONE Analysis window
+  * The SCONE Studio editor now supports Find (Ctrl+F) and Find Next / Previous (F3 / Shift+F3)
+  * The .SCONE file format is now more strict:
+    * Comments using '';' ''%%//%%'' ''/*'' and ''*/'' are no longer supported
+    * Only single line comments '#' and multi-line comments '###' are supported
+  * Improved unit testing
+  * Many documentation updates and fixes
+
+=== Fixes ===
+  * Jump tutorials now use correct init_file
+  * Editor now handles undo/redo of document formatting as single step
+  * JumpMeasure now supports both 'body' and 'target_body', matching documentation and keeping backwards compatibility
+
+==== SCONE 1.0.0 ====
+//Released April 18, 2019//
+
+=== Updates ===
+  * Documentation updates
+  * Depricated StateController, TimeStateController and SensorStateController
+
+==== SCONE 0.22.1 BETA ====
+//Released April 16, 2019//
+
+=== Updates ===
+  * Documentation updates
+  * Updates to unit testing
+  * SCONE now uses OpenSceneGraph 3.4.1 (see https://openscenegraph.org)
+
+=== Fixes ===
+  * SCONE now ignores the initial_load setting when a model does not have contact geometry, preventing the software from hanging.
+
+==== SCONE 0.22.0 BETA ====
+//Released April 4, 2019//
+
+=== Updates ===
+  * SCONE now displays a warning dialog when a scenario contains invalid setting
+  * New and updated tutorials
+  * Added keyboard shurtcuts in SCONE viewer:
+    * 'r' reset viewer camera
+    * 'x' view model along x direction
+    * 'y' view model along y direction
+    * 'z' view model along z direction
+  * Improved reading and error reporting of SCONE scenarios
+
+=== Fixes ===
+  * Fixed visualization of scaled OpenSim models (OpenSim3)
+  * Restored DATE_TIME_EXACT tag in signatures
+
+==== SCONE 0.21.0 ALPHA ====
+//Released February 13, 2019//
+
+=== Updates ===
+  * New tutorials
+  * Improved scone scenario notation, 'type' parameter can now be omitted
+  * Model properties can now be set via ModelProperties
+  * External files can now be included using << FILENAME >>
+  * Improved appearance
+  * Added unit tests
+  * DATE_TIME year now uses 2 digits
+
+=== Fixes ===
+  * NoiseController now works when noise sigma is zero
+  * Better handling of upper / lower parameter bounds during optimizaiton
+
+==== SCONE 0.20.1 ALPHA ====
+//Released January 8, 2019//
+
+=== Fixes ===
+  * Issue where negative tendon lengths would cause a crash in the visualization
+  * Issue where simulations with a duration with a decimal point would not terminate correctly
+
+==== SCONE 0.20.0 ALPHA ====
+//Released December 14, 2018//
+
+=== Updates ===
+  * Ground reaction force is now output both as normalized [gBW] as unnormalized [N] data.
+  * New data output: Center of Pressure (CoP) and Ground Reaction Moment [Nm] 
+
+==== SCONE 0.19.4 ALPHA ====
+//Released December 6, 2018//
+
+=== Fixes ===
+  * Fixed regression reading vector data
+
+==== SCONE 0.19.3 ALPHA ====
+//Released December 6, 2018//
+
+=== Fixes ===
+  * When evaluating a scenario from sconecmd.exe, the average parameters are now used instead of the best, in order to be consistent with scenario test (Ctrl + T) from SCONE studio.
+
+==== SCONE 0.19.2 ALPHA ====
+//Released December 5, 2018//
+
+=== Fixes ===
+  * Fixed issue reading state_init_optimization.exclude from legacy scripts
+  * Fixed issue where data output settings were not read when running from command-line
+
+==== SCONE 0.19.1 ALPHA ====
+//Released November 19, 2018//
+
+=== Updates ===
+  * Ground plane can now be hidden
+
+=== Fixes ===
+  * Fixed auto-formatting issues in scone editor
+  * Correctly handle transform and scale of display geometry
+
+==== SCONE 0.19.0 ALPHA ====
+//Released November 14, 2018//
+
+=== New Features and Updates ===
+  * Improved support for batch processing through the command line interface
+  * Added setting for output video quality and video frame rate
+  * Example updates
+
+==== SCONE 0.18.0 ALPHA ====
+//Released October 17, 2018//
+
+=== New Features and Updates ===
+  * MuscleReflex can now act with activation as source (using KA, A0 and allow_neg_A)
+  * Reflexes can now use contralateral sources, using `_o` postfix.
+  * Added initial_load and initial_load_dof to allow control over the initial position of the model
+  
+=== Fixes ===
+  * Sided reflex data in analysis output is now displayed correctly
+  * Invalid initial_load settings now produce a warning instead of an error
+  * Documentation fixes
+  
+==== SCONE 0.17.1 ALPHA ====
+//Released October 12, 2018//
+
+=== Fixes ===
+  * Fixed issue where settings could not be loaded the first time
+  * Fixed error in the Gait GH2010 example
+
+==== SCONE 0.17.0 ALPHA ====
+//Released October 11, 2018//
+
+=== New Features and Updates ===
+  * Many visualization improvements
+  * New, more robust system for storing settings
+  * Example gait model updates (fixed gastroc length issue) 
+  * Documentation updates
+
+=== Fixes ===
+  * Several minor stability improvements
+
+==== SCONE 0.16.0 ALPHA ====
+//Released October 5, 2018//
+
+=== New Features and Updates ===
+  * NoiseController for simulating Motor Noise
+  * BodyMeasure for measuring position, speed and velocity of a point on a body
+  * JumpMeasure now has offset on body for measuring height
+  * Controllers can now be defined outside Model
+  * Updated Examples
+
+=== Fixes ===
+  * Simulation errors are now properly reported
+  * .par filenames are now written correctly with extremely high / low fitness
+
+==== SCONE 0.15.0 and earlier ====
+//Changes to SCONE are officially published since version 0.16.0//

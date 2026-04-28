@@ -1,0 +1,23 @@
+/*
+** simbody_tools.h
+**
+** Copyright (C) Thomas Geijtenbeek and contributors. All rights reserved.
+**
+** This file is part of SCONE. For more information, see http://scone.software.
+*/
+
+#pragma once
+
+#include "scone/core/math.h"
+#include "scone/core/Vec3.h"
+#include "scone/core/Angle.h"
+#include "xo/geometry/quat.h"
+
+namespace scone
+{
+	inline Vec3 from_osim( const SimTK::Vec3& vec ) { return Vec3( vec[0], vec[1], vec[2] ); }
+	inline Quat from_osim( const SimTK::Quaternion& q ) { return Quat( q[0], q[1], q[2], q[3] ); }
+	inline Quat from_osim_euler_xyz( const SimTK::Vec3& vec ) { return xo::quat_from_euler_xyz( Vec3Rad( vec[0], vec[1], vec[2] ) ); }
+
+	inline SimTK::Vec3 to_osim( const Vec3& v ) { return SimTK::Vec3( v.x, v.y, v.z ); }
+}

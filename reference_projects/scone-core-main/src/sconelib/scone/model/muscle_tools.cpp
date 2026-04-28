@@ -1,0 +1,142 @@
+#include "muscle_tools.h"
+
+#include "Muscle.h"
+#include "Dof.h"
+#include "scone/core/Storage.h"
+#include "scone/core/math.h"
+#include <cmath>
+#include "xo/string/string_tools.h"
+#include "Model.h"
+#include "xo/container/storage.h"
+#include "xo/utility/frange.h"
+#include <functional>
+#include <fstream>
+#include "scone/core/Log.h"
+#include "xo/numerical/bounds.h"
+#include "xo/geometry/geometry_algorithms.h"
+
+namespace scone
+{
+	using DofRangeVec = std::vector< Real >;
+
+	xo::bounds<Real> GetDofBounds( const Dof& dof ) {
+		auto deg_range = Range< Degree >( Range<Radian>( dof.GetRange() ) );
+		return { std::round( deg_range.min.value ), std::round( deg_range.max.value ) };
+	}
+
+	DofRangeVec GetDofRangeVec( const Dof& dof, Real increment )
+	{
+		auto range = xo::frange( GetDofBounds( dof ), increment );
+
+		// DofRangeVec{ range.begin(), range.end() } does not work with MVSC 2017
+		DofRangeVec result;
+		for ( auto r : range )
+			result.push_back( r );
+
+		return result;
+	}
+
+	std::vector<Real> GetDofInfo( Dof& dof, const DofRangeVec& range, std::function<Real()> func ) {
+		std::vector<Real> vec;
+		vec.reserve( range.size() );
+		for ( auto d : range ) {
+			dof.SetPos( Degree( d ).rad_value() );
+			vec.push_back( func() );
+		}
+		return vec;
+	}
+
+	void WriteMuscleInfo( xo::storage<Real>& sto, const string& name, Dof& dof, Muscle& mus, const DofRangeVec& range )
+	{
+		if ( sto.empty() )
+			sto.add_channel( "", range );
+		SCONE_ASSERT( sto.frame_size() == range.size() );
+
+		for ( index_t i = 0; i < range.size(); ++i )
+		{
+			dof.SetPos( Degree( range[i] ).rad_value() );
+			sto[i][name + ".CE"] = mus.GetLength() - mus.GetTendonSlackLength();
+		}
+	}
+
+	void WriteMuscleInfo( Model& model )
+	{
+		path file = model.GetModelFile() + ".muscle_info.txt";
+		auto str = std::ofstream( file.str() );
+		for ( auto& dof : model.GetDofs() )
+		{
+			xo::storage<Real> sto;
+			auto range = GetDofRangeVec( *dof, 1.0 );
+			for ( auto& mus : model.GetMuscles() )
+			{
+				if ( mus->ActsOnDof( *dof ) )
+				{
+					model.SetNullState();
+					auto name = dof->GetName() + '.' + mus->GetName();
+					auto mus_dofs = mus->GetDofs();
+					mus_dofs.erase( std::remove( mus_dofs.begin(), mus_dofs.end(), dof ) );
+
+					if ( !mus_dofs.empty() )
+					{
+						for ( auto other_dof : mus_dofs )
+						{
+							auto other_range = xo::frange( GetDofBounds( *other_dof ), 3 );
+							for ( auto other_val : other_range )
+							{
+								const_cast<Dof*>( other_dof )->SetPos( other_val ); // yes, there's a const_cast, but this is a C++ fail
+								auto postfix = xo::stringf( "@%.0f", other_val ) + other_dof->GetName();
+								WriteMuscleInfo( sto, name + postfix, *dof, *mus, range );
+							}
+						}
+					}
+					else WriteMuscleInfo( sto, name, *dof, *mus, range );
+				}
+			}
+			if ( !sto.empty() )
+			{
+				str << sto;
+				str << std::endl;
+				log::info( "Results of ", dof->GetName(), " written to ", file );
+			}
+		}
+	}
+
+	PropNode GetPathInfo( const std::vector<PathElement>& p )
+	{
+		PropNode pn;
+		for ( auto& pe : p ) {
+			if ( !pe.dir.is_null() ) {
+				auto& cpn = pn.add_child( pe.body->GetName() );
+				cpn["pos"] = pe.pos;
+				cpn["dir"] = pe.dir;
+				if ( pe.radius != 0 )
+					cpn["radius"] = pe.radius;
+			}
+			else pn.add_key_value( pe.body->GetName(), pe.pos );
+		}
+		return pn;
+	}
+
+	int FixPathWrappingDirections( std::vector<PathElement>& p, const String& name )
+	{
+		SCONE_ASSERT( p.size() > 1 );
+		int fixes = 0;
+		for ( index_t i = 1; i < p.size() - 1; ++i ) {
+			if ( p[i].HasDir() ) {
+				auto m1 = p[i - 1].GetWorldPos();
+				auto m2 = p[i + 1].GetWorldPos();
+				auto md = normalized( m2 - m1 );
+				auto w1 = p[i].GetWorldPos();
+				auto w2 = w1 + p[i].GetWorldDir();
+				auto [pm, pw] = xo::closest_line_line( m1, m2, w1, w2 );
+				auto c = xo::cross_product( p[i].dir, md );
+				auto s = xo::dot_product( c, pm - pw );
+				if ( s < 0 ) {
+					p[i].dir = -p[i].dir;
+					++fixes;
+				}
+			}
+		}
+		return fixes;
+	}
+}

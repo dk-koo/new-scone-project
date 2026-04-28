@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -xeuo pipefail
+source "$( dirname ${BASH_SOURCE} )/build_config"
+
+# setup platform-specific build flags
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    PLATFORM_SPECIFIC_FLAGS=(
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=10.10
+        -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+        -DCMAKE_MACOSX_RPATH=TRUE
+        -DCMAKE_INSTALL_RPATH="@executable_path/../lib"
+        -DBUILD_EXAMPLES=OFF
+        -DBUILD_TESTING=OFF
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    )
+else
+    PLATFORM_SPECIFIC_FLAGS=(
+        -DCMAKE_INSTALL_RPATH="\$ORIGIN"
+        -DBUILD_EXAMPLES=OFF
+        -DBUILD_TESTING=OFF
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    )
+fi
+
+echo "${0}: building simbody"
+
+mkdir -p "${SIMBODY_INSTALL_PATH}"
+mkdir -p simbody/build
+cd simbody/build
+cmake .. \
+      -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+      -DCMAKE_VERBOSE_MAKEFILE="${CMAKE_VERBOSE_MAKEFILE}" \
+      -DCMAKE_INSTALL_PREFIX="${SIMBODY_INSTALL_PATH}" \
+      ${PLATFORM_SPECIFIC_FLAGS[@]}
+
+cmake --build . --parallel ${NUM_BUILD_JOBS} --target install
+cd -

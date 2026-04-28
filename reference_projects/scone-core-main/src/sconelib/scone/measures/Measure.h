@@ -1,0 +1,73 @@
+/*
+** Measure.h
+**
+** Copyright (C) Thomas Geijtenbeek and contributors. All rights reserved.
+**
+** This file is part of SCONE. For more information, see http://scone.software.
+*/
+
+#pragma once
+
+#include "scone/controllers/Controller.h"
+#include "scone/core/HasName.h"
+#include "scone/core/Optional.h"
+
+namespace scone
+{
+	/// Base class for Measures.
+	class SCONE_API Measure : public Controller
+	{
+	public:
+		Measure( const PropNode& props, Params& par, const Model& model, const Location& loc );
+		virtual ~Measure() = default;
+
+		/// Name of the Measure, to be used in reporting; defaults to measure type
+		mutable String name_;
+
+		/// Weighting factor applied to the result of the measure; default = 1.
+		Real weight;
+
+		/// Hard threshold above / below which the measure becomes zero; default = not set.
+		optional<Real> threshold;
+
+		/// Soft or subtractive threshold, such that result becomes max( 0, result - soft_threshold); default = not set.
+		optional<Real> soft_threshold;
+
+		/// Transition range above ''threshold'' between which the measure linearly decreases to zero; default = 0.
+		Real threshold_transition;
+
+		/// Offset added to measure result; default = 0.
+		Real result_offset;
+
+		/// Indicate whether this measure should be minimized; default value depends on the measure type (usually true).
+		bool minimize;
+
+		/// Scale the weight by the relative time this measure was active; default = 0.
+		bool scale_weight_by_relative_duration;
+
+		// Get final result.
+		double GetResult( const Model& model );
+		double GetWeightedResult( const Model& model );
+
+		// Get last computed measure value, for use in rewards.
+		virtual double GetCurrentResult( const Model& model );
+		double GetCurrentWeightedResult( const Model& model );
+		virtual void Reset( Model& model ) override;
+
+		const PropNode& GetReport() const { return report_; }
+
+		virtual const String& GetName() const override;
+		bool GetMinimize() const { return minimize; }
+
+	protected:
+		virtual double ComputeResult( const Model& model ) = 0;
+		virtual bool ComputeControls( Model& model, double timestamp ) override final { return false; }
+		virtual UpdateResult PerformAnalysis( const Model& model, double timestamp ) override final;
+		virtual UpdateResult UpdateMeasure( const Model& model, double timestamp ) = 0;
+		double WorstResult() const;
+		double GetRelativeDuration( const Model& model ) const;
+
+		PropNode report_;
+		xo::optional< double > result_; // caches result so it's only computed once
+	};
+}

@@ -1,0 +1,26 @@
+#pragma once
+
+#pragma once
+
+#include "platform.h"
+
+#if defined SCONE_ENABLE_PROFILING
+#	include "Profiler.h"
+#	define SCONE_PROFILE_FUNCTION ScopedProfile unique_scoped_function_profile( Profiler::GetGlobalInstance(), __FUNCTION__ )
+#	define SCONE_PROFILE_SCOPE( scope_name_arg ) ScopedProfile unique_scoped_function_profile( Profiler::GetGlobalInstance(), scope_name_arg )
+#	define SCONE_PROFILE_START Profiler::GetGlobalInstance().Reset()
+#	define SCONE_PROFILE_REPORT log::info( Profiler::GetGlobalInstance().GetReport() )
+#elif defined SCONE_ENABLE_XO_PROFILING
+#	include "xo/system/profiler.h"
+#	define SCONE_PROFILE_FUNCTION( profiler ) xo::scoped_profiler_section scoped_profile_var( __FUNCTION__, profiler )
+#	define SCONE_PROFILE_SCOPE( profiler, scope_name_arg ) xo::scoped_profiler_section scoped_profile_var( scope_name_arg, profiler )
+#else 
+#	define SCONE_PROFILE_FUNCTION( profiler ) void()
+#	define SCONE_PROFILE_SCOPE( profiler, scope_name_arg ) void()
+#endif
+
+namespace scone
+{
+	SCONE_API bool SetProfilerEnabled( bool enabled );
+	SCONE_API bool GetProfilerEnabled();
+}

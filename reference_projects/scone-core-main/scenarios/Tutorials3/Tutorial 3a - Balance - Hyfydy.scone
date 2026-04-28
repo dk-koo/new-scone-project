@@ -1,0 +1,23 @@
+CmaOptimizer {
+	signature_prefix = DATE_TIME
+	min_progress = 1e-4
+	
+	SimulationObjective {
+		max_duration = 30
+		
+		# Model used in simulation
+		ModelHyfydy {
+			model_file = models/H0918v3.hfd
+			state_init_file = init/InitStateStand.zml
+			initial_load = 1
+			use_opensim_activation_dynamics = 1
+			fixed_control_step_size = 0.005
+		}
+		
+		# Controller for reflex based balance (different file)
+		<< controllers/ControllerReflexBalance.scone >>
+		
+		# Measure for standing balance (different file)
+		<< measures/MeasureBalance.scone >>
+	}
+}

@@ -1,0 +1,25 @@
+CmaOptimizer {
+	signature_prefix = DATE_TIME
+	
+	ImitationObjective {
+		file = data/f0914m.FC2.HighJump.D2.sto
+		frame_delta = 5
+		
+		# Model used in simulation
+		OpenSimModel {
+			model_file = data/Human0914.osim
+		}
+		
+		# Controller for the Model
+		FeedForwardController {
+			symmetric = 1
+			
+			# Function for feed-forward pattern
+			PieceWiseConstant {
+				control_points = 2
+				control_point_y = 0.3~0.01<0,1> # Initial y value of control points
+				control_point_dt = 0.2~0.01<0.001,1> # Initial delta time between control points
+			}
+		}
+	}
+}

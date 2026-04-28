@@ -1,0 +1,310 @@
+====== ScopePy Reference Manual ======
+
+===== Classes =====
+
+  * [[#Actuator|Actuator]]
+  * [[#Body|Body]]
+  * [[#Dof|Dof]]
+  * [[#Joint|Joint]]
+  * [[#Leg|Leg]]
+  * [[#Measure|Measure]]
+  * [[#Model|Model]]
+  * [[#Muscle|Muscle]]
+  * [[#Optimizer|Optimizer]]
+  * [[#Quat|Quat]]
+  * [[#Scenario|Scenario]]
+  * [[#Vec3|Vec3]]
+
+
+===== Functions =====
+
+^ Signature ^ Returns ^ Description ^
+| **evaluate_par_file**(arg0: str) | None | Evaluate a .par result from a previous optimization |
+| **is_array_dtype_float32**() | bool | Verify if the NumPy floating point type is 32 bit |
+| **is_array_dtype_float64**() | bool | Verify if the NumPy floating point type is 64 bit |
+| **is_supported**(arg0: str) | bool | Verify if a specific Model type is supported |
+| **load_model**(arg0: str, arg1: str = %%'%%%%'%%) | [[#Model|Model]] | Load a .scone Model with an optional .par to initialize the parameters |
+| **load_scenario**(arg0: str, arg1: Dict[str, str] = {}) | [[#Scenario|Scenario]] | Load a .scone scenario, with an optional Dict of additional settings |
+| **replace_string_tags**(arg0: str) | str | Replace the 'DATE_TIME' tag with the current date and time |
+| **scone_dir**() | str | Get the SCONE Scenarios directory |
+| **scone_results_dir**() | str | Get the SCONE Results directory |
+| **set_array_dtype_float32**() | None | Set the NumPy floating point type to 32 bit |
+| **set_array_dtype_float64**() | None | Set the NumPy floating point type to 64 bit |
+| **set_log_level**(arg0: int) | None | Set the log level |
+| **version**() | str | Get the SCONE version |
+
+===== Actuator =====
+
+^ Signature ^ Returns ^ Description ^
+| **add_input**(arg0: float) | None | Add input value to this Actuator |
+| **clear_input**() | None | Clear the Actuator input (this is done automatically after each simulation step) |
+| **input**() | float | Get the current Actuator input |
+| **max_input**() | float | Get the maximum Actuator input value |
+| **min_input**() | float | Get the minimum Actuator input value |
+| **name**() | str | Get the name of this Actuator |
+
+
+===== Body =====
+
+^ Signature ^ Returns ^ Description ^
+| **add_external_force**(arg0: [[#Vec3|Vec3]]) | None | Add an external force to this Body |
+| **add_external_moment**(arg0: [[#Vec3|Vec3]]) | None | Add an external moment to this Body |
+| **ang_acc**() | [[#Vec3|Vec3]] | Get the angular acceleration of this Body |
+| **ang_vel**() | [[#Vec3|Vec3]] | Get the angular velocity of this Body |
+| **clear_external_force_moment**() | None | Clear the external forces and moments applied to this Body |
+| **com_acc**() | [[#Vec3|Vec3]] | Get the center-of-mass acceleration of this Body |
+| **com_pos**() | [[#Vec3|Vec3]] | Get the center-of-mass position of this Body |
+| **com_vel**() | [[#Vec3|Vec3]] | Get the center-of-mass velocity of this Body |
+| **contact_force**() | [[#Vec3|Vec3]] | Get the sum of all contact forces acting on this Body |
+| **contact_moment**() | [[#Vec3|Vec3]] | Get the sum of all contact moments acting on this Body |
+| **contact_point**() | [[#Vec3|Vec3]] | Get the average position of contacts acting on this Body |
+| **external_force**() | [[#Vec3|Vec3]] | Get the external perturbation force acting on this Body |
+| **external_force_at**() | [[#Vec3|Vec3]] | Get the position at which the average external force is applied |
+| **external_moment**() | [[#Vec3|Vec3]] | Get the external perturbation moment acting on this Body |
+| **inertia_diag**() | [[#Vec3|Vec3]] | Get the inertia diagonal of this Body |
+| **mass**() | float | Get the mass of this Body |
+| **name**() | str | Get the name of this Body |
+| **orientation**() | [[#Quat|Quat]] | Get the orientation of this Body |
+| **point_acc**(arg0: [[#Vec3|Vec3]]) | [[#Vec3|Vec3]] | Get the world linear acceleration of a local point on this Body |
+| **point_pos**(arg0: [[#Vec3|Vec3]]) | [[#Vec3|Vec3]] | Get the world position of a local point on this Body |
+| **point_vel**(arg0: [[#Vec3|Vec3]]) | [[#Vec3|Vec3]] | Get the world linear velocity of a local point on this Body |
+| **set_ang_vel**(arg0: [[#Vec3|Vec3]]) | None | Set the angular velocity of this Body |
+| **set_external_force**(arg0: [[#Vec3|Vec3]]) | None | Set the external force at the center-of-mass of this Body |
+| **set_external_force_at**(arg0: [[#Vec3|Vec3]], arg1: [[#Vec3|Vec3]]) | None | Set the external force at local point on this Body |
+| **set_external_moment**(arg0: [[#Vec3|Vec3]]) | None | Set the external moment of this Body |
+| **set_lin_vel**(arg0: [[#Vec3|Vec3]]) | None | Set the linear velocity of this Body |
+| **set_orientation**(arg0: [[#Quat|Quat]]) | None | Set the orientation of this Body |
+| **set_pos**(arg0: [[#Vec3|Vec3]]) | None | Set the position of this Body |
+
+
+===== Dof =====
+
+^ Signature ^ Returns ^ Description ^
+| **actuator_torque**() | float | Get the actuator torque [Nm] applied to this dof |
+| **is_actuated**() | bool | Check if this Dof is actuated via a Joint Motor (see Joint) |
+| **is_rotational**() | bool | Check if this is a rotational Dof |
+| **limit_torque**() | float | Get the dof limit torque [Nm] |
+| **muscle_moment**() | float | Get the muscle moment [Nm] applied to this dof |
+| **name**() | str | Get the name of this Dof |
+| **pos**() | float | Get the position/value of this Dof [m or rad] |
+| **rotation_axis**() | [[#Vec3|Vec3]] | Get the rotation axis |
+| **set_pos**(arg0: float) | None | Set the Dof position. This is only applied after Model.init_state_from_dofs() |
+| **set_vel**(arg0: float) | None | Set the Dof velocity. This is only applied after Model.init_state_from_dofs() |
+| **vel**() | float | Get the velocity of this Dof |
+
+
+===== Joint =====
+
+^ Signature ^ Returns ^ Description ^
+| **add_motor_torque**(arg0: [[#Vec3|Vec3]]) | None | Add a torque [Nm%%^%%3] to this joint motor |
+| **body**() | [[#Body|Body]] | Get the child Body of this Joint |
+| **has_motor**() | bool | See if this Joint has a Joint Motor |
+| **limit_power**() | float | Get the Joint limit power |
+| **limit_torque**() | [[#Vec3|Vec3]] | Get the Joint limit torque [Nm%%^%%3] |
+| **load**() | float | Get the scalar joint load [BW] |
+| **motor_max_torque**() | float | Get the max torque [Nm] for the joint motor |
+| **motor_torque**() | [[#Vec3|Vec3]] | Get the current motor torque [Nm%%^%%3] |
+| **name**() | str | Get the name of this Joint |
+| **parent_body**() | [[#Body|Body]] | Get the parent Body of this Joint |
+| **pos**() | [[#Vec3|Vec3]] | Get the position of this Joint |
+| **pos_in_child**() | [[#Vec3|Vec3]] | Get the position of this Joint in the child Body coordinate frame |
+| **pos_in_parent**() | [[#Vec3|Vec3]] | Get the position of this Joint in the parent Body coordinate frame |
+| **reaction_force**() | [[#Vec3|Vec3]] | Get the Joint reaction force [N%%^%%3] |
+| **set_motor_damping**(arg0: float) | None | Set the joint motor damping |
+| **set_motor_stiffness**(arg0: float) | None | Set the joint motor stiffness |
+| **set_motor_target_orientation**(arg0: [[#Quat|Quat]]) | None | Set the target orientation of the joint motor |
+| **set_motor_target_velocity**(arg0: [[#Vec3|Vec3]]) | None | Set the target velocity of the joint motor |
+
+
+===== Leg =====
+
+^ Signature ^ Returns ^ Description ^
+| **base_body**() | [[#Body|Body]] | Get the base Body of this Leg |
+| **contact_force**() | [[#Vec3|Vec3]] | Get the contact force applied to this Leg |
+| **contact_load**() | float | Get the contact load applied to this Leg |
+| **contact_moment**() | [[#Vec3|Vec3]] | Get the contact moment applied to this Leg |
+| **contact_pos**() | [[#Vec3|Vec3]] | Get the position of the contact force applied to this Leg |
+| **foot_body**() | [[#Body|Body]] | Get the foot Body of this Leg |
+| **length**() | float | Get the length [m] of this Leg |
+| **name**() | str | Get the name of this Leg |
+| **relative_foot_position**() | [[#Vec3|Vec3]] | Get the relative foot position [m] of this Leg |
+| **upper_body**() | [[#Body|Body]] | Get the upper Body of this Leg |
+
+
+===== Measure =====
+
+^ Signature ^ Returns ^ Description ^
+| **current_result**(arg0: scone::Model) | float | Get the current_result |
+| **current_weighted_result**(arg0: scone::Model) | float | Get the current_weighted_result |
+| **final_result**(arg0: scone::Model) | float | Get the final_result |
+| **final_weighted_result**(arg0: scone::Model) | float | Get the final_weighted_result |
+| **name**() | str | Get the name |
+
+
+===== Model =====
+
+^ Signature ^ Returns ^ Description ^
+| **actuator_input_array**() | numpy.ndarray | Get an array of current actuator inputs |
+| **actuators**() | List[ [[#Actuator|Actuator]] ] | Get the array of Actuators in this Model |
+| **adjust_state_for_load**(arg0: float) | None | Adjust the Model state so that is has a specific contact load [BW] |
+| **advance_simulation_to**(arg0: float) | None | Advance the Model simulation to a specific time [s] |
+| **bodies**() | List[ [[#Body|Body]] ] | Get the array of Bodies in this Model |
+| **com_pos**() | [[#Vec3|Vec3]] | Get the com_pos [m] of this Model |
+| **com_vel**() | [[#Vec3|Vec3]] | Get the com_vel [m/s] of this Model |
+| **contact_force**() | float | Get the contact force [N] applied to this Model |
+| **contact_load**() | float | Get the contact load [BW] applied to this Model |
+| **contact_power**() | float | Get the contact power [W] |
+| **control_step_size**() | float | Get the control step size [s] of this Model |
+| **current_data_frame_time**() | float | Timestamp of most recent SCONE data frame |
+| **current_measure**() | float | Get the current (instantaneous) value of the Measure defined in this Model (useful as reward in Reinforcement Learning) |
+| **delayed_dof_position_array**() | numpy.ndarray | Get an array of current delayed dof positions |
+| **delayed_dof_velocity_array**() | numpy.ndarray | Get an array of current delayed dof velocities |
+| **delayed_muscle_fiber_length_array**() | numpy.ndarray | Get an array of current delayed muscle fiber lengths |
+| **delayed_muscle_fiber_velocity_array**() | numpy.ndarray | Get an array of current delayed muscle fiber velocities |
+| **delayed_muscle_force_array**() | numpy.ndarray | Get an array of current delayed muscle forces |
+| **delayed_vestibular_array**() | numpy.ndarray | Get an array of current delayed vestibular sensors |
+| **dof_position_array**() | numpy.ndarray | Get an array of current dof positions |
+| **dof_velocity_array**() | numpy.ndarray | Get an array of current dof velocities |
+| **dofs**() | List[ [[#Dof|Dof]] ] | Get the array of Dofs in this Model |
+| **final_measure**() | float | Get the final (aggregate) value of the Measure defined in this Model (useful for shooting-based optimizations) |
+| **find_actuator**(arg0: str) | [[#Actuator|Actuator]] | Find a actuator with a specific name |
+| **find_body**(arg0: str) | [[#Body|Body]] | Find a body with a specific name |
+| **find_dof**(arg0: str) | [[#Dof|Dof]] | Find a dof with a specific name |
+| **find_joint**(arg0: str) | [[#Joint|Joint]] | Find a joint with a specific name |
+| **find_muscle**(arg0: str) | [[#Muscle|Muscle]] | Find a muscle with a specific name |
+| **find_muscle_or_group**(arg0: str) | [[#Muscle|Muscle]] | Find a muscle or muscle group with a specific name |
+| **get_control_parameter**(arg0: str) | float | Get the current value of a control parameter |
+| **get_control_parameter_names**() | List[str] | Get a list of all control parameter names in this Model |
+| **get_custom_value**(arg0: str) | float | Get a custom value previously set by set_custom_value or another component |
+| **get_custom_value_names**() | List[str] | Get a list of all custom values in this Model |
+| **get_ray_distance**(arg0: [[#Vec3|Vec3]], arg1: [[#Vec3|Vec3]], arg2: float) | float | Get the distance of a ray cast with a position and direction, up unit max_dist |
+| **get_store_data**() | bool | Get if data is stored during Model simulation |
+| **gravity**() | [[#Vec3|Vec3]] | Get the gravity of this Model |
+| **has_custom_value**(arg0: str) | bool | Check if a custom value exists |
+| **has_simulation_ended**() | bool | Check if the simulation has terminated |
+| **init_muscle_activations**(arg0: numpy.ndarray) | None | Initialize all muscle activations (must call init_state_from_dofs() afterwards) |
+| **init_state_from_dofs**() | None | Initialize the Model state from the current Dof values and equilibrate all muscles (must be called after modifying Dofs) |
+| **integration_step**() | int | Get the integration step of this Model |
+| **joints**() | List[ [[#Joint|Joint]] ] | Get the array of Joints in this Model |
+| **legs**() | List[ [[#Leg|Leg]] ] | Get the array of Legs in this Model |
+| **log_measure_report**() | None | Log the Measure report |
+| **mass**() | float | Get the mass [kg] of this Model |
+| **measure**() | [[#Measure|Measure]] | Get the Measure defined inside this Model |
+| **muscle_activation_array**() | numpy.ndarray | Get an array of current muscle activations |
+| **muscle_excitation_array**() | numpy.ndarray | Get an array of current muscle excitations |
+| **muscle_fiber_length_array**() | numpy.ndarray | Get an array of current muscle fiber lengths |
+| **muscle_fiber_velocity_array**() | numpy.ndarray | Get an array of current muscle fiber velocities |
+| **muscle_force_array**() | numpy.ndarray | Get an array of current muscle forces |
+| **muscles**() | List[ [[#Muscle|Muscle]] ] | Get the array of Muscles in this Model |
+| **name**() | str | Get the name of this Model |
+| **reset**() | None | Reset the model to its initial state |
+| **set_actuator_inputs**(arg0: numpy.ndarray) | None | Set the actuator inputs for this Model |
+| **set_control_parameter**(arg0: str, arg1: float) | int | Set a control parameter (use get_control_parameter_names() for a list of available control parameters) |
+| **set_custom_value**(arg0: str, arg1: float) | None | Set a custom value that can be accessed by other components |
+| **set_delayed_actuator_inputs**(arg0: numpy.ndarray) | None | Set the delayed actuator inputs for this Model |
+| **set_dof_positions**(arg0: numpy.ndarray) | None | Set the dof positions for this Model (must call init_state_from_dofs() afterwards) |
+| **set_dof_velocities**(arg0: numpy.ndarray) | None | Set the dof velocities for this Model (must call init_state_from_dofs() afterwards) |
+| **set_simulation_end_time**(arg0: float) | None | Set the simulation end time [s] for this Model |
+| **set_state**(arg0: Dict[str, float]) | None | Set the current state for this Model |
+| **set_store_data**(arg0: bool) | None | Set if data must be stored during Model simulation (slow, do not use in optimizations) |
+| **set_store_data_profile**(arg0: int) | None | Set store data profile, 0 = default, 1 = minimal |
+| **state**() | Dict[str, float] | Get the current state of this Model |
+| **store_external_data**(arg0: str, arg1: float) | None | Store external data to current data frame |
+| **time**() | float | Get the current simulation time [s] |
+| **write_results**(arg0: str, arg1: str) | None | Write the simulation results to a .sto file |
+
+
+===== Muscle =====
+
+^ Signature ^ Returns ^ Description ^
+| **activation**() | float | Get the activation of this Muscle |
+| **dof_moment**(arg0: [[#Dof|Dof]]) | float | Get the moment of this muscle over a dof |
+| **dof_moment_arm**(arg0: [[#Dof|Dof]]) | float | Get the moment arm of this muscle over a dof |
+| **dofs**() | List[ [[#Dof|Dof]] ] | Get the array of Dofs this Muscle affects |
+| **excitation**() | float | Get the excitation of this Muscle |
+| **fiber_length**() | float | Get the current fiber length of this Muscle |
+| **fiber_length_norm**() | float | Get the current normalized fiber length this Muscle |
+| **fiber_velocity**() | float | Get the current fiber velocity of this Muscle |
+| **fiber_velocity_norm**() | float | Get the current normalized fiber velocity this Muscle |
+| **force**() | float | Get the current force of this Muscle |
+| **force_norm**() | float | Get the current normalized force this Muscle |
+| **init_activation**(arg0: float) | None | Initialize the Muscle activation |
+| **insertion_body**() | [[#Body|Body]] | Get the insertion Body of this Muscle |
+| **joint_moment**(arg0: [[#Joint|Joint]]) | [[#Vec3|Vec3]] | Get the 3D moment of this muscle over a joint |
+| **joint_moment_arm**(arg0: [[#Joint|Joint]]) | [[#Vec3|Vec3]] | Get the 3D moment arm of this muscle over a joint |
+| **joints**() | List[ [[#Joint|Joint]] ] | Get the array of Joints this Muscle crosses |
+| **mass**(arg0: float = 250000.0, arg1: float = 1059.7) | float | Get the mass of the Muscle for a specific tension and density |
+| **max_isometric_force**() | float | Get the maximum isometric force of this Muscle |
+| **name**() | str | Get the name of this Muscle |
+| **optimal_fiber_length**() | float | Get the optimum fiber lengths of this Muscle |
+| **origin_body**() | [[#Body|Body]] | Get the origin Body of this Muscle |
+| **pcsa**(arg0: float = 250000.0) | float | Get the PCSA of the Muscle for a specific tension |
+| **pennation_angle_at_optimal**() | float | Get the pennation angle at optimal of this Muscle |
+| **set_max_activation**(arg0: float) | None | Set the maximum allowed Muscle activation |
+| **set_min_activation**(arg0: float) | None | Set the minimum allowed Muscle activation |
+| **tendon_slack_length**() | float | Get the tendon slack length of this Muscle |
+| **volume**(arg0: float = 250000.0) | float | Get the volume of the Muscle for a specific tension |
+
+
+===== Optimizer =====
+
+^ Signature ^ Returns ^ Description ^
+| **current_step**() | int | Get the current optimization step |
+| **enable_console_output**() | None | Enable console output |
+| **finished**() | bool | Check if the optimization has finished |
+| **fitness**() | float | Get the current best fitness |
+| **output_folder**() | str | Get the output folder for this optimization |
+| **run**() | None | Start the optimization (waits for the optimization to finish) |
+| **run_background**() | None | Start the optimization in the background (returns immediately) |
+| **terminate**() | None | Terminate the optimization |
+| **wait**(arg0: int) | bool | Wait a number milliseconds for the optimization to finish |
+
+
+===== Quat =====
+
+^ Signature ^ Returns ^ Description ^
+| **array**() | numpy.ndarray | Convert to NumPy array |
+| **normalize**() | float | Normalize this Quaternion |
+| **to_euler_xyz**() | [[#Vec3|Vec3]] | Get the XYZ Euler angles of this Quaternion |
+| **to_euler_xzy**() | [[#Vec3|Vec3]] | Get the XZY Euler angles of this Quaternion |
+| **to_euler_yxz**() | [[#Vec3|Vec3]] | Get the YXZ Euler angles of this Quaternion |
+| **to_euler_yzx**() | [[#Vec3|Vec3]] | Get the YZX Euler angles of this Quaternion |
+| **to_euler_zxy**() | [[#Vec3|Vec3]] | Get the ZXY Euler angles of this Quaternion |
+| **to_euler_zyx**() | [[#Vec3|Vec3]] | Get the ZYX Euler angles of this Quaternion |
+| **to_rotation_vector**() | [[#Vec3|Vec3]] | Convert to rotation vector |
+
+=== Properties ===
+
+^ Signature  ^ Description  ^
+| ''w'' | W component |
+| ''x'' | X component |
+| ''y'' | Y component |
+| ''z'' | Z component |
+
+
+===== Scenario =====
+
+^ Signature ^ Returns ^ Description ^
+| **create_optimizer**() | [[#Optimizer|Optimizer]] | Create an Optimizer from this Scenario |
+| **get**(arg0: str) | str | Get a Property in this Scenario |
+| **set**(arg0: str, arg1: str) | None | Set a Property in this Scenario |
+| **set_multiple**(arg0: Dict[str, str]) | None | Set multiple Properties in this Scenario |
+| **start_optimization**() | [[#Optimizer|Optimizer]] | Create and start an Optimizer from this Scenario |
+
+
+===== Vec3 =====
+
+^ Signature ^ Returns ^ Description ^
+| **array**() | numpy.ndarray | Convert to NumPy array |
+| **dot**(arg0: [[#Vec3|Vec3]]) | float | Vec3 dot product |
+| **length**() | float | Get the length of this Vec3 |
+| **normalize**() | float | Normalize this Vec3 |
+| **normalized**() | [[#Vec3|Vec3]] | Get a normalized copy of this Vec3 |
+
+=== Properties ===
+
+^ Signature  ^ Description  ^
+| ''x'' | X component |
+| ''y'' | Y component |
+| ''z'' | Z component |
+

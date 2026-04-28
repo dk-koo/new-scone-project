@@ -1,0 +1,135 @@
+/*
+** EffortMeasure.h
+**
+** Copyright (C) Thomas Geijtenbeek and contributors. All rights reserved.
+**
+** This file is part of SCONE. For more information, see http://scone.software.
+*/
+
+#pragma once
+#include "Measure.h"
+#include "scone/core/StringMap.h"
+#include "scone/core/Statistic.h"
+#include "scone/core/Vec3.h"
+#include "xo/string/dictionary.h"
+
+namespace scone
+{
+	/// Model for measuring effort
+	enum class EffortMeasureType {
+		UnknownMeasure,
+		Constant, ///< Constant energy.
+		TotalForce, ///< Total muscle force.
+		Wang2012, ///< Use metabolic energy measure as defined in [Wang et al. 2012].
+		Uchida2016, ///< Use metabolic energy measure as defined in [Uchida et al. 2016].
+		SquaredMuscleStress, ///< Use the summed squared muscle stress as a measure
+		CubedMuscleStress, ///< Use the summed squared muscle stress as a measure
+		MuscleActivation, ///< Use the summed squared muscle muscle activation
+		SquaredMuscleActivation, ///< Use the summed squared muscle muscle activation
+		CubedMuscleActivation, ///< Use the summed cubed muscle muscle activation
+		MechnicalWork, ///< mechanical work of muscles = sum of muscle moment * dof velocity
+		MotorTorque ///< total torque of dof actuators to the order power
+	};
+
+	/// Measures the energy consumption of a model during simulation, according to various models.
+	/** Supported effort models:
+		- ''Constant'': constant energy measure
+		- ''TotalForce'': total muscle force
+		- ''Wang2012'': metabolic energy measure as defined in [Wang et al. 2012]
+		- ''Uchida2016'': metabolic energy measure as defined in [Uchida et al. 2012]
+		- ''SquaredMuscleStress'': summed squared muscle stress: (force / PCSA)%%^%%2
+		- ''CubedMuscleStress'': summed squared muscle stress: (force / PCSA)%%^%%3
+		- ''SquaredMuscleActivation'': summed squared muscle activation: (activation)%%^%%2
+		- ''CubedMuscleActivation'': summed cubed muscle activation: (activation)^3
+		- ''MechnicalWork'': mechanical work of muscles = sum of muscle moment * dof velocity
+
+		All effort models can be used to compute cost-of-transport, by setting ''use_cost_of_transport = 1''.
+	*/
+	class EffortMeasure : public Measure
+	{
+	public:
+		EffortMeasure( const PropNode& props, Params& par, const Model& model, const Location& loc );
+
+		/// Energy model to be used, can be: ''Constant'', ''TotalForce'', ''Wang2012'', ''Uchida2016'', ''SquaredMuscleStress'', ''CubedMuscleStress'', ''SquaredMuscleActivation'', ''CubedMuscleActivation'', ''MechanicalWork''
+		EffortMeasureType measure_type;
+
+		/// Actuator names to include (wildcards supported, semicolon separated); default = "*"
+		String include;
+
+		/// Actuator names to exclude (wildcards supported, semicolon separated); default = ""
+		String exclude;
+
+		/// Flag indicating to use (energy / distance) as a result; default = 0.
+		bool use_cost_of_transport;
+
+		/// Value to use for specific tension; default = 0.25e6.
+		Real specific_tension;
+
+		/// Value to use for muscle density; default = 1059.7.
+		Real muscle_density;
+
+		/// Default slow / twitch ratio if not defined per muscle (used by Uchida2016); default = 0.5.
+		Real default_muscle_slow_twitch_ratio;
+
+		/// Indicate if fiber ratios are the same for left and right (used by Uchida2016); default = true.
+		bool use_symmetric_fiber_ratios;
+
+		/// Minimum distance used for cost of transport computation; default = 1.0.
+		Real min_distance;
+
+		/// Divide result by number of muscles, useful for muscle activation measures; default = false.
+		bool use_average_per_muscle;
+
+		/// Weight by relative muscle volume, useful for muscle activation measures; default = false.
+		bool use_muscle_volume_weighting;
+
+		/// Use omnidirectional distance measure instead of distance along the x-axis; default = 0.
+		bool omnidirectional;
+
+		/// Store effort values for individual muscles; default = 1 for Wang2012 and Uchida2016, 0 otherwise.
+		bool store_individual_muscle_efforts;
+
+		/// Store details for individual muscles; default = 0.
+		bool store_individual_muscle_effort_details;
+
+		/// Value for mechanical work power
+		Real order;
+
+		virtual UpdateResult UpdateMeasure( const Model& model, double timestamp ) override;
+		virtual double ComputeResult( const Model& model ) override;
+		virtual double GetCurrentResult( const Model& model ) override { return m_Effort.GetLatest(); }
+		virtual void Reset( Model& model ) override { Measure::Reset( model ); m_Effort.Reset(); }
+
+	protected:
+		virtual String GetClassSignature() const override;
+		virtual void StoreData( Storage< Real >::Frame& frame, const StoreDataFlags& flags ) const override;
+
+	private:
+		Real m_Wang2012BasalEnergy;
+		Real m_Uchida2016BasalEnergy;
+		Real m_AerobicFactor;
+		Statistic< double > m_Effort;
+		std::vector<Muscle*> m_MusclePtrs;
+		std::vector<String> m_MuscleNames;
+		mutable std::vector<Real> m_MuscleEfforts;
+		mutable std::vector<xo::flat_map<String, Real>> m_MuscleEffortDetails;
+		Vec3 m_InitComPos;
+		PropNode m_Report;
+		std::vector< Real > m_SlowTwitchFiberRatios;
+		struct MuscleProperties {
+			MuscleProperties( const PropNode& props );
+			String muscle;
+			Real slow_twitch_ratio;
+		};
+
+		double GetCurrentEffort( const Model& model ) const;
+		double GetWang2012( const Model& model ) const;
+		double GetUchida2016( const Model& model ) const;
+		double GetTotalForce( const Model& model ) const;
+		void SetSlowTwitchRatios( const PropNode& props, const Model& model );
+		double GetSquaredMuscleStress( const Model& model ) const;
+		double GetCubedMuscleStress( const Model& model ) const;
+		double GetMechnicalWork( const Model& model ) const;
+		double GetMotorTorque( const Model& model ) const;
+	};
+}

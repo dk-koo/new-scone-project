@@ -1,0 +1,105 @@
+/*
+** HasName.h
+**
+** Copyright (C) Thomas Geijtenbeek and contributors. All rights reserved.
+**
+** This file is part of SCONE. For more information, see http://scone.software.
+*/
+
+#pragma once
+
+#include "platform.h"
+#include "Exception.h"
+#include <algorithm>
+#include <vector>
+#include "types.h"
+#include <xo/string/pattern_matcher.h>
+
+namespace scone
+{
+	class SCONE_API HasName
+	{
+	public:
+		virtual const String& GetName() const = 0;
+		explicit operator const String& ( ) const { return GetName(); }
+		inline virtual ~HasName() {}
+	};
+
+	template< typename T >
+	typename std::vector<T>::const_iterator TryFindByName( const std::vector<T>& cont, const String& name )
+	{
+		return std::find_if( cont.begin(), cont.end(), [&]( const T& item ) { return item->GetName() == name; } );
+	}
+
+	template< typename T >
+	typename std::vector<T>::iterator TryFindByName( std::vector<T>& cont, const String& name )
+	{
+		return std::find_if( cont.begin(), cont.end(), [&]( T& item ) { return item->GetName() == name; } );
+	}
+
+	template< typename T >
+	T* TryFindPtrByName( std::vector<T*>& cont, const String& name )
+	{
+		auto it = TryFindByName( cont, name );
+		return it != cont.end() ? *it : nullptr;
+	}
+
+	template< typename T >
+	const T& FindByName( const std::vector<T>& cont, const String& name )
+	{
+		auto it = TryFindByName( cont, name );
+		SCONE_THROW_IF( it == cont.end(), "Could not find \"" + name + "\"" );
+		return *it;
+	}
+
+	template< typename T >
+	T& FindByName( std::vector<T>& cont, const String& name )
+	{
+		return const_cast<T&>( FindByName( const_cast<const std::vector<T>&>( cont ), name ) );
+	}
+
+	template< typename T >
+	index_t FindIndexByName( const std::vector<T>& cont, const String& name )
+	{
+		if ( auto it = TryFindByName( cont, name ); it != cont.end() )
+			return it - cont.begin();
+		else return NoIndex;
+	}
+
+	template< typename T >
+	std::vector< string > FindMatchingNames( std::vector<T>& cont, const String& include, const String& exclude )
+	{
+		std::vector< string > names;
+		auto inc_pat = xo::pattern_matcher( include );
+		auto ex_pat = xo::pattern_matcher( exclude );
+		for ( auto& item : cont )
+		{
+			if ( inc_pat( item->GetName() ) && !ex_pat( item->GetName() ) )
+				names.emplace_back( item->GetName() );
+		}
+		return names;
+	}
+
+	template< typename T >
+	bool HasElementWithName( const std::vector<T>& cont, const String& name )
+	{
+		return TryFindByName( cont, name ) != cont.end();
+	}
+
+	// #todo: move to elsewhere
+	template< typename T >
+	index_t FindIndex( const std::vector<T>& cont, const T& item )
+	{
+		auto it = std::find( cont.begin(), cont.end(), item );
+		return it != cont.end() ? static_cast<index_t>( it - cont.begin() ) : NoIndex;
+	}
+
+	// #todo: move to elsewhere
+	template< typename T >
+	index_t FindIndexOrThrow( const std::vector<T>& cont, const T& item )
+	{
+		auto it = std::find( cont.begin(), cont.end(), item );
+		SCONE_THROW_IF( it == cont.end(), "Could not find " + to_str( item ) );
+		return static_cast<index_t>( it - cont.begin() );
+	}
+}

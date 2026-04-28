@@ -1,0 +1,183 @@
+/*
+** DofOpenSim4.cpp
+**
+** Copyright (C) Thomas Geijtenbeek and contributors. All rights reserved.
+**
+** This file is part of SCONE. For more information, see http://scone.software.
+*/
+
+#include "DofOpenSim4.h"
+#include "ModelOpenSim4.h"
+#include "JointOpenSim4.h"
+#include "scone/core/Log.h"
+
+#include <OpenSim/Simulation/Model/Model.h>
+#include <OpenSim/Simulation/Model/ForceSet.h>
+#include <OpenSim/Simulation/Model/CoordinateLimitForce.h>
+#include "OpenSim/Simulation/SimbodyEngine/CustomJoint.h"
+#include "OpenSim/Simulation/SimbodyEngine/PinJoint.h"
+#include "OpenSim/Simulation/SimbodyEngine/SpatialTransform.h"
+#include <OpenSim/Actuators/CoordinateActuator.h>
+#include "scone/core/Angle.h"
+#include "xo/container/vector_type.h"
+#include "simbody_tools.h"
+
+namespace scone
+{
+	Joint* try_find_joint( ModelOpenSim4& model, OpenSim::Coordinate& coord ) {
+		if ( auto it = TryFindByName( model.GetJoints(), coord.getJoint().getName() ); it != model.GetJoints().end() )
+			return *it;
+		else return nullptr;
+	}
+
+	DofOpenSim4::DofOpenSim4( ModelOpenSim4& model, OpenSim::Coordinate& coord ) :
+		Dof( try_find_joint( model, coord ) ),
+		m_Model( model ),
+		m_osCoord( coord ),
+		m_pOsLimitForce( nullptr ),
+		m_OsCoordAct( nullptr ),
+		m_RotationAxis()
+	{
+		// find corresponding CoordinateLimitForce
+		auto& forceSet = model.GetOsimModel().getForceSet();
+		for ( int idx = 0; idx < forceSet.getSize(); ++idx )
+		{
+			// OpenSim: Set<T>::get( idx ) is const but returns non-const reference, is this a bug?
+			const OpenSim::CoordinateLimitForce* clf = dynamic_cast<const OpenSim::CoordinateLimitForce*>( &forceSet.get( idx ) );
+			if ( clf && clf->getProperty_coordinate().getValue() == coord.getName() )
+			{
+				// we have found a match!
+				m_pOsLimitForce = clf;
+				break;
+			}
+		}
+	}
+
+	DofOpenSim4::~DofOpenSim4() {}
+
+	Real DofOpenSim4::GetPos() const
+	{
+		return m_osCoord.getValue( m_Model.GetTkState() );
+	}
+
+	Real DofOpenSim4::GetVel() const
+	{
+		return m_osCoord.getSpeedValue( m_Model.GetTkState() );
+	}
+
+	Real DofOpenSim4::GetAcc() const
+	{
+		return m_osCoord.getAccelerationValue( m_Model.GetTkState() );
+	}
+
+	const String& DofOpenSim4::GetName() const
+	{
+		return m_osCoord.getName();
+	}
+
+	Real DofOpenSim4::GetLimitMoment() const
+	{
+		if ( m_pOsLimitForce )
+			return m_pOsLimitForce->calcLimitForce( m_Model.GetTkState() );
+		else return 0.0;
+	}
+
+	void DofOpenSim4::SetPos( Real pos )
+	{
+		if ( !m_osCoord.getLocked( m_Model.GetTkState() ) )
+			m_osCoord.setValue( m_Model.GetTkState(), pos, false );
+	}
+
+	void DofOpenSim4::SetVel( Real vel )
+	{
+		if ( !m_osCoord.getLocked( m_Model.GetTkState() ) )
+			m_osCoord.setSpeedValue( m_Model.GetTkState(), vel );
+	}
+
+	bool DofOpenSim4::IsRotational() const
+	{
+		return m_osCoord.getMotionType() == OpenSim::Coordinate::Rotational;
+	}
+
+	Vec3 DofOpenSim4::GetRotationAxis() const
+	{
+		return m_RotationAxis;
+	}
+
+	Vec3 DofOpenSim4::GetLocalAxis() const
+	{
+		auto* osJoint = &m_osCoord.getJoint();
+		if ( auto* j = dynamic_cast<const JointOpenSim4*>( GetJoint() ); j && j->IsCustomJointWithFunction() ) {
+			return Vec3::neg_unit_z(); // fancy knee joint
+		}
+		else if ( auto* customJoint = dynamic_cast<const OpenSim::CustomJoint*>( osJoint ) ) {
+			auto& st = customJoint->getSpatialTransform();
+			auto myIdx = st.getCoordinateNames().findIndex( m_osCoord.getName() );
+			auto idxVec = st.getCoordinateIndices();
+			for ( index_t axisIdx = 0; axisIdx < idxVec.size(); ++axisIdx )
+				if ( xo::contains( idxVec[axisIdx], myIdx ) )
+					return from_osim( st.getAxes()[axisIdx] );
+		}
+		else if ( auto* pinJoint = dynamic_cast<const OpenSim::PinJoint*>( osJoint ) ) {
+			// #todo: this is incorrect, the axis must be rotated according to the joint orientation
+			// #OpenSim: It is unclear how to do this in OpenSim4
+			auto q = from_osim_euler_xyz( pinJoint->get_frames( 1 ).get_orientation() );
+			return q * Vec3::unit_z();
+		}
+
+		return Vec3::zero();
+	}
+
+	Range< Real > DofOpenSim4::GetRange() const
+	{
+		return Range< Real >( m_osCoord.get_range( 0 ), m_osCoord.get_range( 1 ) );
+	}
+
+	Real DofOpenSim4::GetDefaultPos() const
+	{
+		return m_osCoord.getDefaultValue();
+	}
+
+	Real DofOpenSim4::GetMinInput() const
+	{
+		return m_OsCoordAct ? m_OsCoordAct->getMinControl() : 0.0;
+	}
+
+	Real DofOpenSim4::GetMaxInput() const
+	{
+		return m_OsCoordAct ? m_OsCoordAct->getMaxControl() : 0.0;
+	}
+
+	Real DofOpenSim4::GetMinTorque() const
+	{
+		return m_OsCoordAct ? m_OsCoordAct->getMinControl() * m_OsCoordAct->getOptimalForce() : 0.0;
+	}
+
+	Real DofOpenSim4::GetMaxTorque() const
+	{
+		return m_OsCoordAct ? m_OsCoordAct->getMaxControl() * m_OsCoordAct->getOptimalForce() : 0.0;
+	}
+
+	Real DofOpenSim4::GetActuatorTorque() const
+	{
+		return GetInput() * m_OsCoordAct->getOptimalForce();
+	}
+
+	const Model& DofOpenSim4::GetModel() const
+	{
+		return m_Model;
+	}
+
+	PropNode DofOpenSim4::GetInfo() const
+	{
+		PropNode pn = Dof::GetInfo();
+		if ( m_pOsLimitForce ) {
+			pn["limit_stiffness"] = m_pOsLimitForce->get_lower_stiffness();
+			pn["limit_damping"] = m_pOsLimitForce->get_damping();
+			pn["limit_range"] = BoundsDeg( m_pOsLimitForce->get_lower_limit(), m_pOsLimitForce->get_upper_limit() );
+		}
+		pn["locked"] = m_osCoord.get_locked();
+		return pn;
+	}
+}
+
